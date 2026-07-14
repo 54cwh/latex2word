@@ -5,38 +5,8 @@ const { mapInline, mapInlines } = require('./inline');
 const { buildParagraphs } = require('./formulas');
 const { parseBibText } = require('./bib');
 
-let figCounter = 0;
-let tabCounter = 0;
-
-function resetCounters() { figCounter = 0; tabCounter = 0; }
-
-function captionWithNumber(type, captionInlines) {
-  if (!captionInlines) return null;
-  const hasLabel = (captionInlines || []).some(item => 
-    item.t === 'RawInline' && item.c[0] === 'latex' && /\\label\{(tab:|fig:)/.test(item.c[1])
-  );
-  const children = [];
-  const seqName = type === 'Figure' ? 'Figure' : 'Table';
-  if (type === 'Figure') figCounter++;
-  else tabCounter++;
-  const num = type === 'Figure' ? figCounter : tabCounter;
-  children.push(new TextRun({ text: `${type} `, bold: true, italics: true, size: 20 }));
-  children.push(new SimpleField(`SEQ ${seqName}`, String(num)));
-  children.push(new TextRun({ text: '.  ', bold: true, italics: true, size: 20 }));
-  const filtered = (captionInlines || []).filter(item => 
-    !(item.t === 'RawInline' && item.c[0] === 'latex' && /\\label/.test(item.c[1]))
-  );
-  const mapped = mapInlines(filtered);
-  mapped.forEach(r => {
-    if (r instanceof TextRun) {
-      const opts = r.options || {};
-      children.push(new TextRun({ ...opts, bold: true, italics: true, size: 20 }));
-    } else {
-      children.push(r);
-    }
-  });
-  return children;
-}
+let tabNum = 0;
+let figNum = 0;
 
 function mapBlock(block) {
   if (!block) return [];
@@ -95,10 +65,14 @@ function mapBlock(block) {
       });
       const result = [];
       if (c[1] && c[1][1]) {
-        const capInlines = c[1][1][0] && c[1][1][0].c;
-        if (capInlines && capInlines.length) {
-          const capChildren = captionWithNumber('Table', capInlines);
-          if (capChildren) result.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 120 }, children: capChildren }));
+        const ct = extractText(c[1][1]);
+        if (ct) {
+          tabNum++;
+          result.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 120 }, children: [
+            new TextRun({ text: 'Table ', bold: true, italics: true, size: 20 }),
+            new SimpleField('SEQ Table', String(tabNum)),
+            new TextRun({ text: `.  ${ct}`, bold: true, italics: true, size: 20 }),
+          ] }));
         }
       }
       result.push(new Table({
@@ -172,13 +146,12 @@ function mapBlock(block) {
         }
       });
       if (capText) {
-        const capInlines = caption[1] && caption[1][0] && caption[1][0].c;
-        if (capInlines && capInlines.length) {
-          const capChildren = captionWithNumber('Figure', capInlines);
-          if (capChildren) result.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 60 }, children: capChildren }));
-        } else {
-          result.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 60 }, children: [new TextRun({ text: capText, italics: true, size: 20 })] }));
-        }
+        figNum++;
+        result.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 60 }, children: [
+          new TextRun({ text: 'Figure ', italics: true, size: 20 }),
+          new SimpleField('SEQ Figure', String(figNum)),
+          new TextRun({ text: `.  ${capText}`, italics: true, size: 20 }),
+        ] }));
       }
       return result;
     }
@@ -236,4 +209,4 @@ function collectFormulasFromAst(blocks) {
   return formulas;
 }
 
-module.exports = { mapBlock, mapBlocks, collectFormulasFromAst, resetCounters };
+module.exports = { mapBlock, mapBlocks, collectFormulasFromAst };
