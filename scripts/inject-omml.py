@@ -93,16 +93,6 @@ def inject(our_docx, output_docx, omml_list):
         settings = set_math_font(settings)
         items['word/settings.xml'] = settings.encode('utf-8')
 
-    # Also inject math font into document body for WPS compatibility
-    doc = items['word/document.xml'].decode('utf-8')
-    if '<w:mathPr><w:mathFont' not in doc:
-        body_start = doc.find('<w:body>')
-        if body_start != -1:
-            math_pr = '<w:mathPr><w:mathFont w:val="Cambria Math"/></w:mathPr>'
-            ins = body_start + len('<w:body>')
-            doc = doc[:ins] + math_pr + doc[ins:]
-            items['word/document.xml'] = doc.encode('utf-8')
-
     with zipfile.ZipFile(output_docx, 'w', zipfile.ZIP_DEFLATED) as z:
         for n in names:
             z.writestr(n, items[n])

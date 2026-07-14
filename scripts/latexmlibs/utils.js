@@ -54,7 +54,7 @@ function embedImage(src, options = {}) {
   return new ImageRun({
     data: imgBuffer,
     transformation: { width: options.width || 400, height: options.height || 300 },
-    type: ext === '.png' ? ImageRun.PNG : ImageRun.JPEG,
+    type: ext === '.png' ? 'png' : ext === '.jpg' || ext === '.jpeg' ? 'jpg' : 'png',
     altText: options.alt || '',
   });
 }

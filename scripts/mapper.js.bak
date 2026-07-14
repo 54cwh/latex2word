@@ -804,7 +804,7 @@ function embedImage(src, options = {}) {
       width: options.width || 400,
       height: options.height || 300,
     },
-    type: ext === '.png' ? ImageRun.PNG : ImageRun.JPEG,
+    type: ext === '.png' ? 'png' : ext === '.jpg' || ext === '.jpeg' ? 'jpg' : 'png',
     altText: options.alt || '',
   });
 }

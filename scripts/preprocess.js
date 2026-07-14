@@ -34,7 +34,7 @@ function preprocess(mainTexPath) {
   const hf = extractHeaderFooter(tex);
   if (hf) metadata.headerFooter = hf;
 
-  tex = tex.replace(/\\(documentclass)\s*(\[.*?\])?\s*(\{.*?\})/g, (match) => match);
+  tex = tex.replace(/\\(documentclass)\s*(\[.*?\])?\s*(\{.*?\})/g, '');
 
   tex = tex.replace(/\\(title)\s*\{(.*?)\}/g, (m, cmd, content) => {
     metadata.title = content;
@@ -100,6 +100,11 @@ function preprocess(mainTexPath) {
   }
 
   tex = expandNewcommands(tex);
+
+  // Convert abstract environment to section heading + content for pandoc
+  tex = tex.replace(/\\begin\{abstract\}([\s\S]*?)\\end\{abstract\}/g, (m, content) => {
+    return '\\section*{Abstract}\n' + content.trim();
+  });
 
   return { tex, metadata };
 }
