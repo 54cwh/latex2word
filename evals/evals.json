@@ -1,0 +1,31 @@
+{
+  "skill_name": "latex2word",
+  "evals": [
+    {
+      "id": 1,
+      "name": "academic-paper",
+      "prompt": "I have this LaTeX paper I wrote for a conference. Can you convert it to a clean Word docx? It's at /tmp/latex2word-test/paper.tex",
+      "expected_output": "A .docx file with proper sections, inline and display math formulas, a table with borders, a figure placeholder, footnotes, citations as footnotes, and a bibliography section. Title page with author info.",
+      "files": ["/tmp/latex2word-test/paper.tex"]
+    },
+    {
+      "id": 2,
+      "name": "multi-file-thesis",
+      "prompt": "Please convert my thesis LaTeX project to Word format. The main file is at /tmp/latex2word-test/thesis/main.tex. It has multiple chapters included via \\include. Make sure to merge all the chapters into a single docx with a TOC.",
+      "expected_output": "A .docx file with a table of contents, all chapters merged in order, section headings preserved, math formulas, and a bibliography at the end.",
+      "files": [
+        "/tmp/latex2word-test/thesis/main.tex",
+        "/tmp/latex2word-test/thesis/chapter1.tex",
+        "/tmp/latex2word-test/thesis/chapter2.tex",
+        "/tmp/latex2word-test/thesis/appendix.tex"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "complex-environments",
+      "prompt": "Here's a LaTeX document with advanced environments that I need in Word format: /tmp/latex2word-test/complex.tex. It has theorem/proof environments, align equations, matrices, code listings with syntax highlighting, colored text, and a custom command. Please convert it preserving as much structure as possible.",
+      "expected_output": "A .docx file with theorem/proof blocks formatted with bold/italic labels, aligned equations, matrix rendered as table or formula, code listing in monospace with gray background, colored text preserved, and custom command expanded.",
+      "files": ["/tmp/latex2word-test/complex.tex"]
+    }
+  ]
+}
