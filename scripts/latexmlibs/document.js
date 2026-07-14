@@ -1,6 +1,6 @@
 const { Document, Paragraph, TextRun, Header, Footer, PageNumber, AlignmentType, PageBreak, TableOfContents, LevelFormat } = require('docx');
 const state = require('./state');
-const { mapBlocks } = require('./blocks');
+const { mapBlocks, resetCounters } = require('./blocks');
 const { buildBibMap } = require('./bib');
 
 function buildDocument(ast, options = {}) {
@@ -28,6 +28,7 @@ function buildDocument(ast, options = {}) {
 
   const blocks = ast.blocks || [];
   state.citationMap = buildBibMap(blocks);
+  resetCounters();
   const saved = state.saveState();
   state.formulaTracker = ft;
   state.footnoteCounter = 0;
