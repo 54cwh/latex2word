@@ -101,6 +101,9 @@ function mapBlock(block) {
         const rest = contentBlocks.slice(1).map((b, i, arr) => i === arr.length - 1 && b.children ? new Paragraph({ spacing: { before: 60, after: 60 }, children: [...b.children, new TextRun(' □')] }) : b);
         return [proofFirst, ...rest];
       }
+      if (classes.includes('minipage')) {
+        return divBlocks.flatMap(b => mapBlock(b));
+      }
       return divBlocks.flatMap(b => mapBlock(b));
     }
     case 'RawBlock': {
@@ -136,6 +139,23 @@ function mapBlock(block) {
       return result;
     }
     case 'LineBlock': return [new Paragraph({ children: mapInlines(c) })];
+    case 'DefinitionList': {
+      return c.flatMap(([term, defs]) => {
+        const termPara = new Paragraph({
+          spacing: { before: 120, after: 40 },
+          children: [new TextRun({ text: extractText(term) + ' ', bold: true })]
+        });
+        const defParas = (defs || []).flatMap(d => {
+          if (d.t === 'Para' || d.t === 'Plain') return [new Paragraph({
+            indent: { left: 360 },
+            spacing: { before: 0, after: 60 },
+            children: mapInlines(d.c)
+          })];
+          return mapBlock(d);
+        });
+        return [termPara, ...defParas];
+      });
+    }
     default: return [];
   }
 }

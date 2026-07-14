@@ -84,6 +84,11 @@ function mapInline(inline) {
           const codes = { red: 'FF0000', blue: '0000FF', green: '00AA00', cyan: '00FFFF', magenta: 'FF00FF', yellow: 'FFFF00', black: '000000', white: 'FFFFFF', gray: '888888', orange: 'FF8000', purple: '800080' };
           return [new TextRun({ text, color: codes[color] || color })];
         }
+        const latexCmds = { texttrademark: '\u2122', textregistered: '\u00AE', textcopyright: '\u00A9', textbullet: '\u2022', textperiodcentered: '\u00B7', textemdash: '\u2014', textendash: '\u2013', textellipsis: '\u2026', textasciitilde: '~', textbackslash: '\\', textgreater: '>', textless: '<', textbar: '|', textdagger: '\u2020', textdaggerdbl: '\u2021', textsection: '\u00A7', textparagraph: '\u00B6', textsterling: '\u00A3', textyen: '\u00A5', texteuro: '\u20AC', textcent: '\u00A2', textdegree: '\u00B0', textpm: '\u00B1', texttimes: '\u00D7', textdiv: '\u00F7', micro: '\u00B5' };
+        for (const [cmd, unicode] of Object.entries(latexCmds)) {
+          raw = raw.replace(new RegExp(`\\\\${cmd}`, 'g'), unicode);
+        }
+        raw = raw.replace(/\\marginpar\{[^}]*\}/g, '');
         const cleaned = raw.trim();
         if (cleaned) return [new TextRun(cleaned)];
         return [];
