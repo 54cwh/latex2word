@@ -14,7 +14,9 @@ function mapBlock(block) {
   switch (t) {
     case 'Header': {
       const level = c[0];
-      if (level === 1) { state.sectionNumber++; state.eqCounter = 0; }
+      const classes = c[1] && c[1][1] || [];
+      const isNumbered = !classes.includes('unnumbered');
+      if (level === 1 && isNumbered) { state.sectionNumber++; state.eqCounter = 0; tabNum = 0; figNum = 0; }
       return [new Paragraph({ heading: HeadingLevel[`HEADING_${level}`], children: mapInlines(c[2]) })];
     }
     case 'Para': return buildParagraphs(c);
@@ -69,9 +71,8 @@ function mapBlock(block) {
         if (ct) {
           tabNum++;
           result.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 120 }, children: [
-            new TextRun({ text: 'Table ', bold: true, italics: true, size: 20 }),
-            new SimpleField('SEQ Table', String(tabNum)),
-            new TextRun({ text: `.  ${ct}`, bold: true, italics: true, size: 20 }),
+            new TextRun({ text: `Table ${state.sectionNumber}-${tabNum}.  `, bold: true, italics: true, size: 20 }),
+            new TextRun({ text: ct, bold: true, italics: true, size: 20 }),
           ] }));
         }
       }
@@ -148,9 +149,8 @@ function mapBlock(block) {
       if (capText) {
         figNum++;
         result.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 60 }, children: [
-          new TextRun({ text: 'Figure ', italics: true, size: 20 }),
-          new SimpleField('SEQ Figure', String(figNum)),
-          new TextRun({ text: `.  ${capText}`, italics: true, size: 20 }),
+          new TextRun({ text: `Figure ${state.sectionNumber}-${figNum}.  `, italics: true, size: 20 }),
+          new TextRun({ text: capText, italics: true, size: 20 }),
         ] }));
       }
       return result;

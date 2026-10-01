@@ -23,61 +23,66 @@ If no output path is given, writes to `input.docx`.
 input.tex → [preprocess.js: merge \input/\include, expand \newcommand,
               detect TOC/title/bib, extract fancyhdr]
           → [pandoc -f latex+raw_tex -t json]
-          → [mapper.js: AST → docx-js Document with __MATH_N__ placeholders]
+          → [scripts/latexmlibs/: modular AST → docx-js Document
+             with __MATH_N__ placeholders]
           → [inject-omml.py: pandoc converts formulas.tex → OMML,
               inject OMML into placeholder docx, set Cambria Math font]
           → output.docx
-```
-
-## Test Files
-
-```bash
-node scripts/latex2docx.js /tmp/latex2word-test/paper.tex /tmp/paper.docx
-node scripts/latex2docx.js /tmp/latex2word-test/thesis/main.tex /tmp/thesis.docx
-node scripts/latex2docx.js /tmp/latex2word-test/complex.tex /tmp/complex.docx
 ```
 
 ## Capabilities
 
 | Feature | How it works |
 |---|---|
-| Sections (\\section, \\subsection) | pandoc Header → Heading1/2/3 styles |
-| Inline/Display Math | pandoc Math → OMML via inject-omml.py (pandoc → OMML post-injection). Cambria Math font set globally. |
-| Tables | pandoc Table → docx-js Table with **three-line style** (top/bottom heavy lines, header bottom line, no data row borders) |
+| Sections (\section, \subsection) | pandoc Header → Heading1/2/3 styles. Unnumbered sections (Abstract) have `unnumbered` class, excluded from section counter. |
+| Inline/Display Math | pandoc Math → OMML via inject-omml.py (pandoc → OMML post-injection). Cambria Math font set globally. Numbered equations use `#(sec-seq)` format. |
+| Tables | pandoc Table → docx-js Table with **three-line style** (top/bottom heavy lines, header bottom line, no data row borders). Auto-numbered as `Table sec-seq` in caption. |
 | Header/Footer | pandoc fancyhdr → docx-js Header/Footer with PAGE fields |
-| Table of Contents | pandoc \\tableofcontents → docx-js TOC field code (TOC \\h \\o "1-3" \\u). SDT unwrapped for WPS compatibility. Press F9 to generate. |
-| Cover page | pandoc Meta title/author/date + \\maketitle detection |
+| Table of Contents | pandoc \tableofcontents → docx-js TOC field code (TOC \h \o "1-3" \u). SDT unwrapped for WPS compatibility. Press F9 to generate. |
+| Cover page | pandoc Meta title/author/date + \maketitle detection |
 | Footnotes | pandoc Note → docx-js FootnoteReferenceRun |
 | Bibliography | pandoc thebibliography RawBlock → numbered list |
 | Citations | pandoc Cite → bibitem number mapping (`[1]`) |
 | Theorem/Proof | pandoc Div with class → bold "Theorem."/"Proof." + content |
 | Code blocks | pandoc CodeBlock → monospace paragraph |
-| Figures | pandoc Figure → ImageRun with caption |
+| Figures | pandoc Figure → ImageRun with auto-numbered caption `Figure sec-seq` |
 | Lists | pandoc BulletList/OrderedList → docx-js lists |
 | DisplayMath | Split to separate centered paragraphs |
-| Multi-file | preprocess.js merges \\input/\\include with path resolution |
-| Custom commands | preprocess.js expands \\newcommand (zero-arg) |
-| Bold/Italic/Math nesting | mapper.js preserves Math elements inside Strong/Emph formatting |
+| Multi-file | preprocess.js merges \input/\include with path resolution |
+| Custom commands | preprocess.js expands \newcommand (zero-arg) |
+| Bold/Italic/Math nesting | inline.js preserves Math elements inside Strong/Emph formatting |
+| Theorem/Proof/QED | pandoc Div → structured paragraph with QED symbol (∎) |
+| Section auto-numbering | All numbered elements (equations, tables, figures) use `sec-seq` format, resetting per numbered Heading 1. |
 
 ## Scripts
 
 ### `latex2docx.js` — Main entry
 
-Orchestrates the full pipeline.
+Orchestrates the full pipeline: preprocess → pandoc AST → docx-js → OMML injection.
 
 ### `preprocess.js` — Preprocessor
 
-- Merges \\input{file} and \\include{file} (resolves relative paths)
-- Expands \\newcommand (zero-argument commands)
-- Detects \\tableofcontents, \\maketitle, \\printbibliography, \\thebibliography
-- Detects fancyhdr and extracts \\lhead/\\chead/\\rhead/\\lfoot/\\cfoot/\\rfoot
-- Strips preamble for pandoc
+- Merges \input{file} and \include{file} (resolves relative paths)
+- Expands \newcommand (zero-argument commands)
+- Detects \tableofcontents, \maketitle, \printbibliography, \thebibliography
+- Detects fancyhdr and extracts \lhead/\chead/\rhead/\lfoot/\cfoot/\rfoot
+- Strips preamble, converts abstract to \section*{Abstract}
+- Strips \documentclass from body
 
-### `mapper.js` — pandoc AST → docx-js Document
+### `scripts/latexmlibs/` — Modular pandoc AST → docx-js
 
-Handles all major pandoc block types (Header, Para, Plain, BulletList, OrderedList, Table, CodeBlock, BlockQuote, HorizontalRule, Div, Figure, RawBlock) and inline types (Str, Space, Strong, Emph, Underline, SmallCaps, Strikeout, Superscript, Subscript, Code, Link, Note, Cite, Math, RawInline, SoftBreak, LineBreak). Math elements get `__MATH_N__` placeholders for later OMML injection.
+| Module | Role |
+|---|---|
+| `index.js` | Entry point: walks pandoc AST blocks, delegates to specialized modules |
+| `blocks.js` | Block-level mappers: Header, Table, Figure, Para, Lists, Div, RawBlock, CodeBlock, HorizontalRule, BlockQuote |
+| `inline.js` | Inline mappers: Str, Space, Strong, Emph, Math, Link, Note, Cite, Code, formatting spans |
+| `document.js` | docx-js Document builder: creates Document with styles, sections, headers, footers, cover page |
+| `formulas.js` | Formula collection/numbering: extracts numbered display math, builds OMML placeholder mapping |
+| `bib.js` | Bibliography/citation handling: maps bibitem citations to numbers, builds numbered reference list |
+| `state.js` | Shared state: formula tracker, footnote counter, citation map, equation/section/figure/table counters |
+| `utils.js` | Utilities: image embedding (detects PNG/PDF/JPG by magic bytes), text extraction, style helpers |
 
-Three-line table: `tblBorders` top/bottom sz=12, header cells bottom sz=6, no data row borders.
+Three-line table style: `tblBorders` top/bottom sz=12, header cells bottom sz=6, no data row borders.
 
 ### `inject-omml.py` — OMML post-injection
 

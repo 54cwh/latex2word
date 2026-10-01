@@ -4,7 +4,7 @@ let footnoteCounter = 0;
 let footnoteTexts = {};
 let citationMap = {};
 let eqCounter = 0;
-let sectionNumber = 1;
+let sectionNumber = 0;
 
 function setFormulaTracker(tracker) {
   formulaTracker = tracker;
@@ -24,7 +24,7 @@ function resetState() {
   footnoteTexts = {};
   citationMap = {};
   eqCounter = 0;
-  sectionNumber = 1;
+  sectionNumber = 0;
   imageDir = null;
 }
 

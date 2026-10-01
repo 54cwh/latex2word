@@ -101,6 +101,9 @@ function preprocess(mainTexPath) {
 
   tex = expandNewcommands(tex);
 
+  // Expand \makecell[align]{content} and \thead{content} for pandoc compatibility
+  tex = expandCellCommands(tex);
+
   // Convert abstract environment to section heading + content for pandoc
   tex = tex.replace(/\\begin\{abstract\}([\s\S]*?)\\end\{abstract\}/g, (m, content) => {
     return '\\section*{Abstract}\n' + content.trim();
@@ -166,6 +169,37 @@ function expandNewcommands(tex) {
   }
 
   return tex;
+}
+
+function expandCellCommands(tex) {
+  const regex = /\\(makecell|thead)(?![a-zA-Z])(?:\s*\[(.*?)\])?\s*\{/g;
+  let result = '';
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(tex)) !== null) {
+    result += tex.slice(lastIndex, match.index);
+    const start = match.index + match[0].length;
+    const braceContent = extractBraces(tex, start);
+    const inner = braceContent.content;
+    const processed = inner.replace(/\\\\/g, '\\newline ');
+    result += processed;
+    lastIndex = braceContent.endIndex + 1;
+  }
+
+  result += tex.slice(lastIndex);
+  return result;
+}
+
+function extractBraces(str, start) {
+  let depth = 1;
+  let i = start;
+  while (i < str.length && depth > 0) {
+    if (str[i] === '{') depth++;
+    else if (str[i] === '}') depth--;
+    if (depth > 0) i++;
+  }
+  return { content: str.slice(start, i), endIndex: i };
 }
 
 module.exports = { preprocess };

@@ -33,7 +33,7 @@ function buildDocument(ast, options = {}) {
   state.footnoteCounter = 0;
   state.footnoteTexts = {};
   state.eqCounter = 0;
-  state.sectionNumber = 1;
+  state.sectionNumber = 0;
   const mappedChildren = mapBlocks(blocks);
   const footnotes = state.footnoteTexts;
   state.restoreState(saved);
