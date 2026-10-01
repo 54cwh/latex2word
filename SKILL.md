@@ -1,7 +1,7 @@
 ---
 name: latex2word
 description: "Use this skill whenever the user wants to convert LaTeX (.tex) documents into Word (.docx) files. Triggers include: any mention of 'convert latex to word', 'tex to docx', 'latex to docx', 'compile latex to word', 'turn my paper into a word document', or any request to convert academic papers, theses, math-heavy documents, or any .tex file into a polished .docx. This skill uses a direct LaTeX-to-docx pipeline (preprocess → pandoc AST → docx-js mapper → OMML injection) for high-fidelity output that preserves sections, math formulas (OMML), three-line tables, figures, footnotes, citations, TOC, bibliography, header/footer, theorem/proof environments, and multi-file projects."
-license: Proprietary. LICENSE.txt has complete terms
+license: MIT
 ---
 
 # latex2word Conversion Scripts
